@@ -1,6 +1,5 @@
 // Create
 export const create = async (req: any, res: any) => {
-  console.log(req.body);
   try {
     const { firstName, lastName, phone, branch, appoint_date, appoint_time } =
       req.body;
@@ -30,7 +29,6 @@ export const create = async (req: any, res: any) => {
     }
 
     res.json(result);
-    console.log(result);
   } catch (err: any) {
     console.log(err.message);
     return res.status(500).json({ msg: err.message });
@@ -41,6 +39,8 @@ export const create = async (req: any, res: any) => {
 export const dataSearch = async (req: any, res: any) => {
   try {
     const data = req.sql`SELECT aplifly.id, aplifly.first_name, aplifly.last_name, aplifly.phone, branch.branch, aplifly.appoint_date, extract(epoch from appoint_date), aplifly.appoint_time FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
+
+    res.json(data);
   } catch (err: any) {
     return res.status(500).json({ msg: err.message });
   }
