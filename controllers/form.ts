@@ -1,8 +1,12 @@
+import postgres from "postgres";
+
 // Create
 export const create = async (req: any, res: any) => {
   try {
     const { firstName, lastName, phone, branch, appoint_date, appoint_time } =
       req.body;
+
+    const sql = req.sql as postgres.Sql;
 
     if (
       !firstName ||
@@ -15,18 +19,46 @@ export const create = async (req: any, res: any) => {
       return res.status(400).json({ msg: "Please entry all of information!" });
     }
 
-    const result = await req.sql`
+    const result = await sql<
+      {
+        id: number;
+        name: string;
+        branch_name: string;
+        telephone: string;
+        appoint_date: string;
+      }[]
+    >`
             WITH checkCount (count) AS (
               SELECT COUNT(*) as count FROM aplifly 
               WHERE branch_id = ${branch} AND appoint_date = ${appoint_date} AND appoint_time = ${appoint_time}
             )
             INSERT INTO aplifly (first_name, last_name, phone, branch_id, appoint_date, appoint_time)
-            SELECT ${firstName}, ${lastName}, ${phone}, ${branch}, ${appoint_date}, ${appoint_time} FROM checkCount WHERE count < 5 
-            RETURNING id`;
+            SELECT ${firstName}, ${lastName}, ${phone}, ${branch}, ${appoint_date}, ${appoint_time} FROM checkCount WHERE count < 10 
+            RETURNING id::text, first_name as name, (SELECT branch FROM branch b WHERE b.id = ${branch}) as branch_name, phone as telephone, EXTRACT(epoch FROM appoint_date + (appoint_time::integer * INTERVAL '1 hour')) as appoint_date`;
 
-    if (result === 0) {
+    if (result.length === 0) {
       return res.status(409).json({ msg: "เต็มแล้วนะ" });
     }
+
+    const typesenseRes = await fetch(
+      process.env.TYPESENSE_ENDPOINT + "/collections/aplifly/documents",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: result[0].id,
+          name: result[0].name,
+          branchName: result[0].branch_name,
+          telephone: result[0].telephone,
+          appointDate: parseFloat(result[0].appoint_date),
+        }),
+        headers: {
+          "X-TYPESENSE-API-KEY": process.env.TYPESENSE_API_KEY || "",
+        },
+      }
+    );
+
+    if (typesenseRes.status !== 201)
+      return res.status(500).json({ msg: typesenseRes.statusText });
 
     res.json(result);
   } catch (err: any) {
@@ -39,7 +71,7 @@ export const create = async (req: any, res: any) => {
 export const dataSearch = async (req: any, res: any) => {
   try {
     const data =
-      await req.sql`SELECT aplifly.id, aplifly.first_name, aplifly.last_name, aplifly.phone, branch.branch, aplifly.appoint_date, extract(epoch from appoint_date), aplifly.appoint_time FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
+      await req.sql`SELECT aplifly.id, aplifly.first_name as firstName, aplifly.phone as phoneNumber, branch.branch as branchName, EXTRACT(epoch FROM appoint_date + (appoint_time::integer * INTERVAL '1 hour')) as appointDate FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
 
     res.json(data);
   } catch (err: any) {
