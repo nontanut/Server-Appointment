@@ -67,18 +67,6 @@ export const create = async (req: any, res: any) => {
   }
 };
 
-// Create For Search
-export const dataSearch = async (req: any, res: any) => {
-  try {
-    const data =
-      await req.sql`SELECT aplifly.id, aplifly.first_name as firstName, aplifly.phone as phoneNumber, branch.branch as branchName, EXTRACT(epoch FROM appoint_date + (appoint_time::integer * INTERVAL '1 hour')) as appointDate FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
-
-    res.json(data);
-  } catch (err: any) {
-    return res.status(500).json({ msg: err.message });
-  }
-};
-
 // Read
 export const data = async (req: any, res: any) => {
   try {
