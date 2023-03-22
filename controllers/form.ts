@@ -35,10 +35,11 @@ export const create = async (req: any, res: any) => {
   }
 };
 
-// Create For Seach
+// Create For Search
 export const dataSearch = async (req: any, res: any) => {
   try {
-    const data = req.sql`SELECT aplifly.id, aplifly.first_name, aplifly.last_name, aplifly.phone, branch.branch, aplifly.appoint_date, extract(epoch from appoint_date), aplifly.appoint_time FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
+    const data =
+      await req.sql`SELECT aplifly.id, aplifly.first_name, aplifly.last_name, aplifly.phone, branch.branch, aplifly.appoint_date, extract(epoch from appoint_date), aplifly.appoint_time FROM aplifly INNER JOIN branch ON aplifly.branch_id = branch.id`;
 
     res.json(data);
   } catch (err: any) {
