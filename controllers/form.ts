@@ -45,7 +45,6 @@ export const create = async (req: any, res: any) => {
       {
         method: "POST",
         body: JSON.stringify({
-          id: result[0].id,
           name: result[0].name,
           branchName: result[0].branch_name,
           telephone: result[0].telephone,
