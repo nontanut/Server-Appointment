@@ -34,7 +34,7 @@ export const create = async (req: any, res: any) => {
             )
             INSERT INTO aplifly (first_name, last_name, phone, branch_id, appoint_date, appoint_time)
             SELECT ${firstName}, ${lastName}, ${phone}, ${branch}, ${appoint_date}, ${appoint_time} FROM checkCount WHERE count < 10 
-            RETURNING id::text, first_name as name, (SELECT branch FROM branch b WHERE b.id = ${branch}) as branch_name, phone as telephone, EXTRACT(epoch FROM appoint_date + (appoint_time::integer * INTERVAL '1 hour')) as appoint_date`;
+            RETURNING id::text, first_name as name, (SELECT branch FROM branch b WHERE b.id = ${branch}) as branch_name, phone as telephone, EXTRACT(epoch FROM appoint_date at time zone '+7' + (appoint_time::integer * INTERVAL '1 hour')) as appoint_date`;
 
     if (result.length === 0) {
       return res.status(409).json({ msg: "เต็มแล้วนะ" });
